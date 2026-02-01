@@ -28,12 +28,25 @@ void UTelemetrySubsystem::Deinitialize()
 
 void UTelemetrySubsystem::Configure(const FString& InServerURL)
 {
-	ServerURL = InServerURL;
+	ServerURL = InServerURL.IsEmpty() ? TEXT("http://10.20.5.27:8080/telemetry") : InServerURL;
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Configured server: %s"), *ServerURL);
 }
 
 void UTelemetrySubsystem::StartNewSession()
 {
+	if (ServerURL.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot start session - Configure() not called yet!"));
+		return;
+	}
+
+	// End previous session if exists
+	if (!CurrentSessionID.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Ending previous session before starting new one"));
+		EndSession();
+	}
+
 	FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
 	CurrentSessionID = FString::Printf(TEXT("%s_%s"), *MachineName, *Timestamp);
 	FrameCounter = 0;
@@ -50,7 +63,14 @@ void UTelemetrySubsystem::EndSession()
 	{
 		return;
 	}
-
+	
+	if (ServerURL.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot end session - server not configured"));
+		CurrentSessionID.Empty();
+		return;
+	}
+	
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Session ended: %s"), *CurrentSessionID);
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("session_end"), 0.0f);

@@ -15,7 +15,7 @@ class TELEMETRYPLUGIN_API UTelemetrySubsystem : public UGameInstanceSubsystem
 	GENERATED_BODY()
 
 public:
-	// Subsystem lifecycle - called automatically by engine
+	// Subsystem lifecycle
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
@@ -23,19 +23,19 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void Configure(const FString& ServerURL);
 
-	/** Start a new session - call when player spawns */
+	/** Start a new session*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void StartNewSession();
 
-	/** End current session - call on player death/level end */
+	/** End current session*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void EndSession();
 
-	/** Send position update - call from timer */
+	/** Send position update*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendPositionUpdate(FVector Position, float GameTime);
 
-	/** Send damage event - call when player takes damage */
+	/** Send damage event*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendDamageEvent(
 		float DamageAmount,
@@ -46,7 +46,7 @@ public:
 		float GameTime
 	);
 
-	/** Send death event - call on player death */
+	/** Death event*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendDeathEvent(FVector Position, float GameTime);
 
