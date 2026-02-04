@@ -1,5 +1,7 @@
 #include "TelemetrySubsystem.h"
 #include "HttpModule.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "JsonObjectConverter.h"
@@ -77,6 +79,16 @@ void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 	SendTelemetryEvent(EventData);
 }
 
+void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float GameTime)
+{
+	//todo
+}
+
+void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
+{
+	//todo
+}
+
 void UTelemetrySubsystem::SendDamageEvent(
 	float DamageAmount,
 	float HealthBefore,
@@ -108,6 +120,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 
 void UTelemetrySubsystem::SendDeathEvent(FVector Position, float GameTime)
 {
+	//Todo abstract into method
 	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
 	{
 		return;

@@ -6,16 +6,18 @@ public class TelemetryPlugin : ModuleRules
 {
 	public TelemetryPlugin(ReadOnlyTargetRules Target) : base(Target)
 	{
-		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicIncludePaths.AddRange(
-			new string[] {
+			new string[]
+			{
 				// ... add public include paths required here ...
 			}
 		);
 
 		PrivateIncludePaths.AddRange(
-			new string[] {
+			new string[]
+			{
 				// ... add other private include paths required here ...
 			}
 		);
@@ -24,9 +26,9 @@ public class TelemetryPlugin : ModuleRules
 			new string[]
 			{
 				"Core",
-				"HTTP",	   // Added for HTTP functionality
-				"Json",	   // Added for JSON parsing
-				"JsonUtilities"  // Added for JSON utilities
+				"HTTP", // Added for HTTP functionality
+				"Json", // Added for JSON parsing
+				"JsonUtilities" // Added for JSON utilities
 				// ... add other public dependencies that you statically link with here ...
 			}
 		);
@@ -37,7 +39,7 @@ public class TelemetryPlugin : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore",
+				"SlateCore", "EnhancedInput"
 				// ... add private dependencies that you statically link with here ...
 			}
 		);

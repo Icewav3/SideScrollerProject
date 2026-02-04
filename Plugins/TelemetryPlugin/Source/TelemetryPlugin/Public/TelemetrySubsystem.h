@@ -9,6 +9,7 @@
  * Game Instance Subsystem for sending telemetry to HTTP endpoint
  * Automatically managed by UGameInstance - no manual instantiation needed
  */
+//TODO add intuitive keywords for all blueprint callable methods
 UCLASS()
 class TELEMETRYPLUGIN_API UTelemetrySubsystem : public UGameInstanceSubsystem
 {
@@ -32,8 +33,18 @@ public:
 	void EndSession();
 
 	/** Send position update - call from timer */
+	// NOTE: Could probably remove by having it private and called when other logging methods are called instead
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendPositionUpdate(FVector Position, float GameTime);
+
+
+	/** Send log when IA is called - call from input events */
+	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	void SendPlayerInputAction(UInputAction* InputAction, float GameTime); //not sure should pass pos here
+
+	/** Send log for when IMC changes - idk where to call this tbh */
+	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	void SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime);
 
 	/** Send damage event - call when player takes damage */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
