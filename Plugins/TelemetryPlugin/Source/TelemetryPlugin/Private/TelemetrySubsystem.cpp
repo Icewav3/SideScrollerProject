@@ -101,12 +101,30 @@ void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 
 void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float GameTime)
 {
-	//todo
+	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	{
+		return;
+	}
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_recieved"), GameTime);
+	
+	TSharedPtr<FJsonObject> IAObject = MakeShareable(new FJsonObject);
+	IAObject->SetStringField(TEXT("new"), InputAction->GetName());
+
 }
 
 void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
 {
-	//todo
+	
+	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	{
+		return;
+	}
+	
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_mapping_context_changed"), GameTime);
+
+	TSharedPtr<FJsonObject> IMCObject = MakeShareable(new FJsonObject);
+	IMCObject->SetStringField(TEXT("new"), InputMappingContext->GetName());
+	SendTelemetryEvent(EventData);
 }
 
 void UTelemetrySubsystem::SendDamageEvent(

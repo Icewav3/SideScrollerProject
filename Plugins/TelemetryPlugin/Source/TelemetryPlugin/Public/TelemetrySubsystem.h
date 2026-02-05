@@ -21,11 +21,11 @@ public:
 	virtual void Deinitialize() override;
 
 	/** Configure the server endpoint - call this in GameInstance BP */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(keywords = "start config configure endpoint telemetry"))
 	void Configure(const FString& ServerURL);
 
-	/** Start a new session*/
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	/** Start a new session*/	
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(keywords = "start session telemetry"))
 	void StartNewSession();
 
 	/** End current session*/
