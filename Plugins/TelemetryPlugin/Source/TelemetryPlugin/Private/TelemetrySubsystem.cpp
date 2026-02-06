@@ -83,7 +83,7 @@ void UTelemetrySubsystem::EndSession()
 
 void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 {
-	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	if (IsEndpointInvalid())
 	{
 		return;
 	}
@@ -101,7 +101,7 @@ void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 
 void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float GameTime)
 {
-	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	if (IsEndpointInvalid())
 	{
 		return;
 	}
@@ -115,7 +115,7 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
 {
 	
-	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	if (IsEndpointInvalid())
 	{
 		return;
 	}
@@ -135,7 +135,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 	FVector Position,
 	float GameTime)
 {
-	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	if (IsEndpointInvalid())
 	{
 		return;
 	}
@@ -158,8 +158,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 
 void UTelemetrySubsystem::SendDeathEvent(FVector Position, float GameTime)
 {
-	//Todo abstract into method
-	if (ServerURL.IsEmpty() || CurrentSessionID.IsEmpty())
+	if (IsEndpointInvalid())
 	{
 		return;
 	}
@@ -188,6 +187,22 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 	return JsonObject;
 }
 
+bool UTelemetrySubsystem::IsEndpointInvalid() const
+{
+	//priv method for debug logging
+	if (ServerURL.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot start session - Configure() not called yet!"));
+		return true;
+	}
+	
+	if (CurrentSessionID.IsEmpty())
+	{
+		return true;
+	}
+	return false;
+}
+
 void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData)
 {
 	if (ServerURL.IsEmpty())
@@ -213,6 +228,6 @@ void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& Json
 	Request->SetContentAsString(OutputString);
 	Request->SetTimeout(RequestTimeout);
 
-	// Send asynchronously (fire and forget)
+	// Send asynchronously
 	Request->ProcessRequest();
 }
