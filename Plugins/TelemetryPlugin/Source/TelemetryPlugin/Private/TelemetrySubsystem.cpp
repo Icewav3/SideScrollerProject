@@ -13,9 +13,11 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	Super::Initialize(Collection);
 
 	MachineName = FPlatformProcess::ComputerName();
+	UserName = FPlatformProcess::UserName();
 	FrameCounter = 0;
 
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Initialized on: %s"), *MachineName);
+	//TODO add username
 }
 
 void UTelemetrySubsystem::Deinitialize()
@@ -83,7 +85,7 @@ void UTelemetrySubsystem::EndSession()
 
 void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 {
-	if (IsEndpointInvalid())
+	if (!IsTelemetryReady())
 	{
 		return;
 	}
@@ -101,7 +103,7 @@ void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 
 void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float GameTime)
 {
-	if (IsEndpointInvalid())
+	if (!IsTelemetryReady())
 	{
 		return;
 	}
@@ -115,7 +117,7 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
 {
 	
-	if (IsEndpointInvalid())
+	if (!IsTelemetryReady())
 	{
 		return;
 	}
@@ -135,7 +137,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 	FVector Position,
 	float GameTime)
 {
-	if (IsEndpointInvalid())
+	if (!IsTelemetryReady())
 	{
 		return;
 	}
@@ -158,7 +160,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 
 void UTelemetrySubsystem::SendDeathEvent(FVector Position, float GameTime)
 {
-	if (IsEndpointInvalid())
+	if (!IsTelemetryReady())
 	{
 		return;
 	}
@@ -187,20 +189,23 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 	return JsonObject;
 }
 
-bool UTelemetrySubsystem::IsEndpointInvalid() const
+bool UTelemetrySubsystem::IsTelemetryReady() const
 {
-	//priv method for debug logging
-	if (ServerURL.IsEmpty())
-	{
-		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot start session - Configure() not called yet!"));
-		return true;
-	}
+    // Check if telemetry system is properly configured
+    if (ServerURL.IsEmpty())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot send events - server URL not configured"));
+        return false;
+    }
+
+    // Check if we have an active session
+    if (CurrentSessionID.IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot send events - no active session"));
+        return false;
+    }
 	
-	if (CurrentSessionID.IsEmpty())
-	{
-		return true;
-	}
-	return false;
+    return true;
 }
 
 void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData)

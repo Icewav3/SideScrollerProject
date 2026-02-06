@@ -69,14 +69,14 @@ private:
 
 	// Create base telemetry object with common fields
 	TSharedPtr<FJsonObject> CreateBaseTelemetryObject(const FString& EventType, float GameTime);
+	bool IsTelemetryReady() const;
 
 	// State
 	FString ServerURL;
 	FString CurrentSessionID;
 	FString MachineName;
+	FString UserName;
 	int32 FrameCounter;
 
 	static constexpr float RequestTimeout = 5.0f;
-
-   bool IsEndpointInvalid() const; 
 };
