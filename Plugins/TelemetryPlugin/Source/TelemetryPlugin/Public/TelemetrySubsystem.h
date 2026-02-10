@@ -9,11 +9,9 @@
  * Game Instance Subsystem for sending telemetry to HTTP endpoint
  * Automatically managed by UGameInstance - no manual instantiation needed
  */
-//TODO add intuitive keywords for all blueprint callable methods
 //TODO refactor to have a getter for the subsystem or change all methods to be static to ref the static subsystem 
 // itself - this would mean I dont always have to have a telemetry system node connected to all nodes from the plugin.
-//TODO look into ability to hook into inputs as well as player death with as little coupling with the player's 
-// eventgraph as possible 
+
 UCLASS()
 class TELEMETRYPLUGIN_API UTelemetrySubsystem : public UGameInstanceSubsystem
 {
@@ -34,24 +32,24 @@ public:
 	void StartNewSession();
 
 	/** End current session*/
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="end session telemetry"))
 	void EndSession();
 
 	/** Send position update - call from a timer */
 	// NOTE: Could probably remove by having it private and called when other logging methods are called instead
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="position update location tracking"))
 	void SendPositionUpdate(FVector Position, float GameTime);
 
 	/** Send log when IA is called - call from input events */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input action player control"))
 	void SendPlayerInputAction(UInputAction* InputAction, float GameTime); //not sure should pass pos here
 
 	/** Send log for when IMC changes - idk where to call this tbh */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input mapping context change"))
 	void SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime);
 
 	/** Send damage event - call when player takes damage */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="damage health combat"))
 	void SendDamageEvent(
 		float DamageAmount,
 		float HealthBefore,
@@ -62,7 +60,7 @@ public:
 	);
 
 	/** Death event*/
-	UFUNCTION(BlueprintCallable, Category = "Telemetry")
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="death player end"))
 	void SendDeathEvent(FVector Position, float GameTime);
 
 private:
