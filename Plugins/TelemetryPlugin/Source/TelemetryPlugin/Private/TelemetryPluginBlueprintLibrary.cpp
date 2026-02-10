@@ -1,6 +1,7 @@
 ﻿#include "TelemetryPluginBlueprintLibrary.h"
 #include "TelemetrySubsystem.h"
 #include "Engine/GameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 UTelemetrySubsystem* UTelemetryBlueprintLibrary::GetTelemetrySubsystem(const UObject* WorldContextObject)
 {
@@ -41,6 +42,8 @@ void UTelemetryBlueprintLibrary::EndSession(const UObject* WorldContextObject)
 
 void UTelemetryBlueprintLibrary::LogPosition(const UObject* WorldContextObject, FVector Position, float GameTime)
 {
+    //BUG currently not allowed need to look into
+    float GameTimeSeconds = UGameplayStatics::GetRealTimeSeconds(GetWorld());   
     if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
     {
         Telemetry->SendPositionUpdate(Position, GameTime);

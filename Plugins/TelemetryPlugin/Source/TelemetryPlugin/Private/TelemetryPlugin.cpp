@@ -6,6 +6,7 @@ void FTelemetryPluginModule::StartupModule()
 {
 	// This is called when your plugin is loaded
 	// We don't need any special initialization
+	//TODO PURPLE
 	UE_LOG(LogTemp, Log, TEXT("[TelemetryPlugin] Module loaded"));
 }
 

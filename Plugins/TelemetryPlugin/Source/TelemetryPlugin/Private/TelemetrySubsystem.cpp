@@ -17,7 +17,7 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	FrameCounter = 0;
 
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Initialized on: %s"), *MachineName);
-	//TODO add username
+
 }
 
 void UTelemetrySubsystem::Deinitialize()
