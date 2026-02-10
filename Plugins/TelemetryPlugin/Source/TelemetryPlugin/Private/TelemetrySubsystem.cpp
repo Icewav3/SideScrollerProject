@@ -67,14 +67,14 @@ void UTelemetrySubsystem::EndSession()
 	{
 		return;
 	}
-	
+
 	if (ServerURL.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot end session - server not configured"));
 		CurrentSessionID.Empty();
 		return;
 	}
-	
+
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Session ended: %s"), *CurrentSessionID);
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("session_end"), 0.0f);
@@ -107,25 +107,28 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 	{
 		return;
 	}
-	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_recieved"), GameTime);
-	
-	TSharedPtr<FJsonObject> IAObject = MakeShareable(new FJsonObject);
-	IAObject->SetStringField(TEXT("new"), InputAction->GetName());
 
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_recieved"), GameTime);
+
+	TSharedPtr<FJsonObject> IAObject = MakeShareable(new FJsonObject);
+	IAObject->SetStringField(TEXT("action_name"), InputAction->GetName());
+	EventData->SetObjectField(TEXT("input_action"), IAObject);
+	SendTelemetryEvent(EventData);
 }
 
 void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
 {
-	
 	if (!IsTelemetryReady())
 	{
 		return;
 	}
-	
+
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_mapping_context_changed"), GameTime);
 
 	TSharedPtr<FJsonObject> IMCObject = MakeShareable(new FJsonObject);
-	IMCObject->SetStringField(TEXT("new"), InputMappingContext->GetName());
+	IMCObject->SetStringField(TEXT("context_name"), InputMappingContext->GetName());
+	EventData->SetObjectField(TEXT("mapping_context"), IMCObject);
+
 	SendTelemetryEvent(EventData);
 }
 
@@ -191,21 +194,21 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 
 bool UTelemetrySubsystem::IsTelemetryReady() const
 {
-    // Check if telemetry system is properly configured
-    if (ServerURL.IsEmpty())
-    {
-        UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot send events - server URL not configured"));
-        return false;
-    }
+	// Check if telemetry system is properly configured
+	if (ServerURL.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot send events - server URL not configured"));
+		return false;
+	}
 
-    // Check if we have an active session
-    if (CurrentSessionID.IsEmpty())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot send events - no active session"));
-        return false;
-    }
-	
-    return true;
+	// Check if we have an active session
+	if (CurrentSessionID.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot send events - no active session"));
+		return false;
+	}
+
+	return true;
 }
 
 void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData)

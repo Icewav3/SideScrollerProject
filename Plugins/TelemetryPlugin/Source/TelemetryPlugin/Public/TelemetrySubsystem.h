@@ -10,7 +10,8 @@
  * Automatically managed by UGameInstance - no manual instantiation needed
  */
 //TODO add intuitive keywords for all blueprint callable methods
-//TODO refactor to have a getter for the subsystem or change all methods to be static to ref the static subsystem itself
+//TODO refactor to have a getter for the subsystem or change all methods to be static to ref the static subsystem 
+// itself - this would mean I dont always have to have a telemetry system node connected to all nodes from the plugin.
 //TODO look into ability to hook into inputs as well as player death with as little coupling with the player's 
 // eventgraph as possible 
 UCLASS()
@@ -24,10 +25,11 @@ public:
 	virtual void Deinitialize() override;
 
 	/** Configure the server endpoint - call this in GameInstance BP */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="start, config, configure, endpoint, telemetry"))
+	UFUNCTION(BlueprintCallable, Category = "Telemetry",
+		meta=(Keywords="start, config, configure, endpoint, telemetry"))
 	void Configure(const FString& ServerURL);
-	
-	/** Start a new session*/	
+
+	/** Start a new session*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords = "start session telemetry"))
 	void StartNewSession();
 
@@ -39,7 +41,7 @@ public:
 	// NOTE: Could probably remove by having it private and called when other logging methods are called instead
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendPositionUpdate(FVector Position, float GameTime);
-	
+
 	/** Send log when IA is called - call from input events */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry")
 	void SendPlayerInputAction(UInputAction* InputAction, float GameTime); //not sure should pass pos here
