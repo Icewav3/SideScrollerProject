@@ -1,7 +1,6 @@
 ﻿#include "TelemetryPluginBlueprintLibrary.h"
 #include "TelemetrySubsystem.h"
 #include "Engine/GameInstance.h"
-#include "Kismet/GameplayStatics.h"
 
 UTelemetrySubsystem* UTelemetryBlueprintLibrary::GetTelemetrySubsystem(const UObject* WorldContextObject)
 {
@@ -17,12 +16,7 @@ UTelemetrySubsystem* UTelemetryBlueprintLibrary::GetTelemetrySubsystem(const UOb
 	}
 
 	UGameInstance* GameInstance = World->GetGameInstance();
-	if (!GameInstance)
-	{
-		return nullptr;
-	}
-
-	return GameInstance->GetSubsystem<UTelemetrySubsystem>();
+	return GameInstance ? GameInstance->GetSubsystem<UTelemetrySubsystem>() : nullptr;
 }
 
 void UTelemetryBlueprintLibrary::ConfigureTelemetry(const UObject* WorldContextObject, const FString& ServerURL)
@@ -65,16 +59,6 @@ void UTelemetryBlueprintLibrary::LogInputAction(const UObject* WorldContextObjec
 		Telemetry->SendPlayerInputAction(InputAction, GameTime);
 	}
 }
-
-//TODO UNUSED
-/*void UTelemetryBlueprintLibrary::LogInputMappingContext(const UObject* WorldContextObject, UInputMappingContext* 
-InputMappingContext, float GameTime)
-{
-    if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
-    {
-        Telemetry->SendPlayerInputMappingContextUpdate(InputMappingContext, GameTime);
-    }
-}*/
 
 void UTelemetryBlueprintLibrary::LogDamage(
 	const UObject* WorldContextObject,

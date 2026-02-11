@@ -1,7 +1,6 @@
 #include "TelemetrySubsystem.h"
 #include "HttpModule.h"
 #include "InputAction.h"
-#include "InputMappingContext.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "JsonObjectConverter.h"
@@ -43,7 +42,6 @@ void UTelemetrySubsystem::StartNewSession()
 		return;
 	}
 
-	// End previous session if exists
 	if (!CurrentSessionID.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Ending previous session before starting new one"));
@@ -67,13 +65,6 @@ void UTelemetrySubsystem::EndSession()
 		return;
 	}
 
-	if (ServerURL.IsEmpty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot end session - server not configured"));
-		CurrentSessionID.Empty();
-		return;
-	}
-
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Session ended: %s"), *CurrentSessionID);
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("session_end"), 0.0f);
@@ -90,12 +81,7 @@ void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
 	}
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("position"), GameTime);
-
-	TSharedPtr<FJsonObject> PosObject = MakeShareable(new FJsonObject);
-	PosObject->SetNumberField(TEXT("x"), Position.X);
-	PosObject->SetNumberField(TEXT("y"), Position.Y);
-	PosObject->SetNumberField(TEXT("z"), Position.Z);
-	EventData->SetObjectField(TEXT("player_pos"), PosObject);
+	EventData->SetObjectField(TEXT("player_pos"), CreatePositionObject(Position));
 
 	SendTelemetryEvent(EventData);
 }
@@ -112,26 +98,9 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 	TSharedPtr<FJsonObject> IAObject = MakeShareable(new FJsonObject);
 	IAObject->SetStringField(TEXT("action_name"), InputAction->GetName());
 	EventData->SetObjectField(TEXT("input_action"), IAObject);
+
 	SendTelemetryEvent(EventData);
 }
-
-//TODO UNUSED
-/*void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float 
-GameTime)
-{
-	if (!IsTelemetryReady())
-	{
-		return;
-	}
-
-	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_mapping_context_changed"), GameTime);
-
-	TSharedPtr<FJsonObject> IMCObject = MakeShareable(new FJsonObject);
-	IMCObject->SetStringField(TEXT("context_name"), InputMappingContext->GetName());
-	EventData->SetObjectField(TEXT("mapping_context"), IMCObject);
-
-	SendTelemetryEvent(EventData);
-}*/
 
 void UTelemetrySubsystem::SendDamageEvent(
 	float DamageAmount,
@@ -152,12 +121,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 	EventData->SetNumberField(TEXT("health_before"), HealthBefore);
 	EventData->SetNumberField(TEXT("health_after"), HealthAfter);
 	EventData->SetStringField(TEXT("damage_source"), DamageSource);
-
-	TSharedPtr<FJsonObject> PosObject = MakeShareable(new FJsonObject);
-	PosObject->SetNumberField(TEXT("x"), Position.X);
-	PosObject->SetNumberField(TEXT("y"), Position.Y);
-	PosObject->SetNumberField(TEXT("z"), Position.Z);
-	EventData->SetObjectField(TEXT("player_pos"), PosObject);
+	EventData->SetObjectField(TEXT("player_pos"), CreatePositionObject(Position));
 
 	SendTelemetryEvent(EventData);
 }
@@ -170,12 +134,7 @@ void UTelemetrySubsystem::SendDeathEvent(FVector Position, float GameTime)
 	}
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("death"), GameTime);
-
-	TSharedPtr<FJsonObject> PosObject = MakeShareable(new FJsonObject);
-	PosObject->SetNumberField(TEXT("x"), Position.X);
-	PosObject->SetNumberField(TEXT("y"), Position.Y);
-	PosObject->SetNumberField(TEXT("z"), Position.Z);
-	EventData->SetObjectField(TEXT("player_pos"), PosObject);
+	EventData->SetObjectField(TEXT("player_pos"), CreatePositionObject(Position));
 
 	SendTelemetryEvent(EventData);
 }
@@ -193,16 +152,23 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 	return JsonObject;
 }
 
+TSharedPtr<FJsonObject> UTelemetrySubsystem::CreatePositionObject(FVector Position)
+{
+	TSharedPtr<FJsonObject> PosObject = MakeShareable(new FJsonObject);
+	PosObject->SetNumberField(TEXT("x"), Position.X);
+	PosObject->SetNumberField(TEXT("y"), Position.Y);
+	PosObject->SetNumberField(TEXT("z"), Position.Z);
+	return PosObject;
+}
+
 bool UTelemetrySubsystem::IsTelemetryReady() const
 {
-	// Check if telemetry system is properly configured
 	if (ServerURL.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot send events - server URL not configured"));
 		return false;
 	}
 
-	// Check if we have an active session
 	if (CurrentSessionID.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot send events - no active session"));
@@ -214,13 +180,6 @@ bool UTelemetrySubsystem::IsTelemetryReady() const
 
 void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData) const
 {
-	if (ServerURL.IsEmpty())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Not configured - call Configure() first"));
-		return;
-	}
-
-	// Serialize JSON
 	FString OutputString;
 	TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutputString);
 	if (!FJsonSerializer::Serialize(JsonData.ToSharedRef(), Writer))
@@ -229,14 +188,11 @@ void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& Json
 		return;
 	}
 
-	// Create HTTP request
 	TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request = FHttpModule::Get().CreateRequest();
 	Request->SetURL(ServerURL);
 	Request->SetVerb(TEXT("POST"));
 	Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
 	Request->SetContentAsString(OutputString);
 	Request->SetTimeout(RequestTimeout);
-
-	// Send asynchronously
 	Request->ProcessRequest();
 }

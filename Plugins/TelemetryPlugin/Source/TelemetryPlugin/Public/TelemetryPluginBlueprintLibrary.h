@@ -1,13 +1,11 @@
 ﻿#pragma once
 
-
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "TelemetrySubsystem.h"
 #include "TelemetryPluginBlueprintLibrary.generated.h"
 
 class UInputAction;
-class UInputMappingContext;
 
 UCLASS()
 class TELEMETRYPLUGIN_API UTelemetryBlueprintLibrary : public UBlueprintFunctionLibrary
@@ -39,13 +37,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Telemetry",
 		meta=(WorldContext="WorldContextObject", Keywords="input action telemetry"))
 	static void LogInputAction(const UObject* WorldContextObject, UInputAction* InputAction, float GameTime);
-
-	//TODO UNUSED
-	/** Log input mapping context change */
-	/*UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(WorldContext="WorldContextObject", Keywords="input 
-	mapping context telemetry"))
-	static void LogInputMappingContext(const UObject* WorldContextObject, UInputMappingContext* InputMappingContext, float GameTime);
-	*/
 
 	/** Log damage event */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry",

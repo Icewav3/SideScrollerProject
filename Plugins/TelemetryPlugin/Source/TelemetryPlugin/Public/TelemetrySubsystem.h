@@ -33,18 +33,12 @@ public:
 	void EndSession();
 
 	/** Send position update - call from a timer */
-	// NOTE: Could probably remove by having it private and called when other logging methods are called instead
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="position update location tracking"))
 	void SendPositionUpdate(FVector Position, float GameTime);
 
 	/** Send log when IA is called - call from input events */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input action player control"))
-	void SendPlayerInputAction(UInputAction* InputAction, float GameTime); //not sure should pass pos here
-
-	/** Send log for when IMC changes - idk where to call this tbh */
-	//TODO UNUSED
-	/*UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input mapping context change"))
-	void SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime);*/
+	void SendPlayerInputAction(UInputAction* InputAction, float GameTime);
 
 	/** Send damage event - call when player takes damage */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="damage health combat"))
@@ -67,6 +61,7 @@ private:
 
 	// Create base telemetry object with common fields
 	TSharedPtr<FJsonObject> CreateBaseTelemetryObject(const FString& EventType, float GameTime);
+	TSharedPtr<FJsonObject> CreatePositionObject(FVector Position);
 	bool IsTelemetryReady() const;
 
 	// State
