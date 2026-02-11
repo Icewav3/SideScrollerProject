@@ -9,9 +9,6 @@
  * Game Instance Subsystem for sending telemetry to HTTP endpoint
  * Automatically managed by UGameInstance - no manual instantiation needed
  */
-//TODO refactor to have a getter for the subsystem or change all methods to be static to ref the static subsystem 
-// itself - this would mean I dont always have to have a telemetry system node connected to all nodes from the plugin.
-
 UCLASS()
 class TELEMETRYPLUGIN_API UTelemetrySubsystem : public UGameInstanceSubsystem
 {
@@ -45,8 +42,9 @@ public:
 	void SendPlayerInputAction(UInputAction* InputAction, float GameTime); //not sure should pass pos here
 
 	/** Send log for when IMC changes - idk where to call this tbh */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input mapping context change"))
-	void SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime);
+	//TODO UNUSED
+	/*UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="input mapping context change"))
+	void SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime);*/
 
 	/** Send damage event - call when player takes damage */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="damage health combat"))
@@ -65,7 +63,7 @@ public:
 
 private:
 	// Internal helper to send JSON to server
-	void SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData);
+	void SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData) const;
 
 	// Create base telemetry object with common fields
 	TSharedPtr<FJsonObject> CreateBaseTelemetryObject(const FString& EventType, float GameTime);

@@ -16,8 +16,7 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 	UserName = FPlatformProcess::UserName();
 	FrameCounter = 0;
 
-	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Initialized on: %s"), *MachineName);
-
+	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Initialized on: %s under username: %s"), *MachineName, *UserName);
 }
 
 void UTelemetrySubsystem::Deinitialize()
@@ -116,7 +115,9 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 	SendTelemetryEvent(EventData);
 }
 
-void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float GameTime)
+//TODO UNUSED
+/*void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingContext* InputMappingContext, float 
+GameTime)
 {
 	if (!IsTelemetryReady())
 	{
@@ -130,7 +131,7 @@ void UTelemetrySubsystem::SendPlayerInputMappingContextUpdate(UInputMappingConte
 	EventData->SetObjectField(TEXT("mapping_context"), IMCObject);
 
 	SendTelemetryEvent(EventData);
-}
+}*/
 
 void UTelemetrySubsystem::SendDamageEvent(
 	float DamageAmount,
@@ -211,7 +212,7 @@ bool UTelemetrySubsystem::IsTelemetryReady() const
 	return true;
 }
 
-void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData)
+void UTelemetrySubsystem::SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData) const
 {
 	if (ServerURL.IsEmpty())
 	{
