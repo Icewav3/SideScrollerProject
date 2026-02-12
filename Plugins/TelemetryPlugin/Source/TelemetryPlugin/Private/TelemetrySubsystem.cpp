@@ -20,6 +20,14 @@ void UTelemetrySubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void UTelemetrySubsystem::Deinitialize()
 {
+	// Auto-cleanup: End run if active
+	if (CurrentRunData.IsActive())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Auto-ending active run on deinitialize"));
+		EndRun(TEXT("shutdown"));
+	}
+
+	// Auto-cleanup: End session if active
 	if (!CurrentSessionID.IsEmpty())
 	{
 		EndSession();
@@ -42,18 +50,21 @@ void UTelemetrySubsystem::StartNewSession()
 		return;
 	}
 
+	// Auto-end previous session if exists
 	if (!CurrentSessionID.IsEmpty())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Ending previous session before starting new one"));
 		EndSession();
 	}
 
+	// Generate unique session ID
 	FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S"));
 	CurrentSessionID = FString::Printf(TEXT("%s_%s"), *MachineName, *Timestamp);
 	FrameCounter = 0;
 
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Session started: %s"), *CurrentSessionID);
 
+	// Send session_start event
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("session_start"), 0.0f);
 	SendTelemetryEvent(EventData);
 }
@@ -62,15 +73,84 @@ void UTelemetrySubsystem::EndSession()
 {
 	if (CurrentSessionID.IsEmpty())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot end session - no active session"));
 		return;
+	}
+
+	// Auto-end active run before ending session
+	if (CurrentRunData.IsActive())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Auto-ending active run before session end"));
+		EndRun(TEXT("session_end"));
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Session ended: %s"), *CurrentSessionID);
 
+	// Send session_end event
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("session_end"), 0.0f);
 	SendTelemetryEvent(EventData);
 
 	CurrentSessionID.Empty();
+}
+
+void UTelemetrySubsystem::StartRun()
+{
+	if (!IsSessionActive())
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Telemetry] Cannot start run - no active session. Call StartNewSession() first."));
+		return;
+	}
+
+	// Auto-end previous run if exists
+	if (CurrentRunData.IsActive())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Ending previous run before starting new one"));
+		EndRun(TEXT("new_run_started"));
+	}
+
+	// Get current game time
+	float CurrentTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+
+	// Generate unique run ID
+	FString Timestamp = FDateTime::Now().ToString(TEXT("%Y%m%d_%H%M%S_%f"));
+	CurrentRunData.RunID = FString::Printf(TEXT("%s_run_%s"), *CurrentSessionID, *Timestamp);
+	CurrentRunData.RunStartTime = CurrentTime;
+	CurrentRunData.RunEndTime = 0.0f;  // 0 indicates active run
+	CurrentRunData.RunTotalTime = 0.0f;
+	CurrentRunData.EndReason.Empty();
+
+	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Run started: %s at time %.2f"), *CurrentRunData.RunID, CurrentTime);
+
+	// Send run_start event
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("run_start"), CurrentTime);
+	SendTelemetryEvent(EventData);
+}
+
+void UTelemetrySubsystem::EndRun(const FString& Reason)
+{
+	if (!CurrentRunData.IsActive())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] Cannot end run - no active run"));
+		return;
+	}
+
+	// Get current game time
+	float CurrentTime = GetWorld() ? GetWorld()->GetTimeSeconds() : 0.0f;
+
+	// Finalize run data
+	CurrentRunData.RunEndTime = CurrentTime;
+	CurrentRunData.RunTotalTime = CurrentRunData.RunEndTime - CurrentRunData.RunStartTime;
+	CurrentRunData.EndReason = Reason;
+
+	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Run ended: %s | Reason: %s | Duration: %.2fs | Rooms: %d"), 
+		*CurrentRunData.RunID, *Reason, CurrentRunData.RunTotalTime, CurrentRunData.RoomsCleared);
+
+	// Send run_end event (includes final run data)
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("run_end"), CurrentTime);
+	SendTelemetryEvent(EventData);
+
+	// Clear run data
+	CurrentRunData = FTelemetryRunData();
 }
 
 void UTelemetrySubsystem::SendPositionUpdate(FVector Position, float GameTime)
@@ -93,7 +173,13 @@ void UTelemetrySubsystem::SendPlayerInputAction(UInputAction* InputAction, float
 		return;
 	}
 
-	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_recieved"), GameTime);
+	if (!InputAction)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Telemetry] SendPlayerInputAction called with null InputAction"));
+		return;
+	}
+	
+	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("input_received"), GameTime);
 
 	TSharedPtr<FJsonObject> IAObject = MakeShareable(new FJsonObject);
 	IAObject->SetStringField(TEXT("action_name"), InputAction->GetName());
@@ -126,7 +212,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 	SendTelemetryEvent(EventData);
 }
 
-void UTelemetrySubsystem::SendDeathEvent(FString Cause, FVector Position, float GameTime)
+void UTelemetrySubsystem::SendDeathEvent(const FString& Cause, FVector Position, float GameTime)
 {
 	if (!IsTelemetryReady())
 	{
@@ -143,6 +229,7 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 {
 	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
 
+	// Base fields
 	JsonObject->SetStringField(TEXT("machine_id"), MachineName);
 	JsonObject->SetStringField(TEXT("session_id"), CurrentSessionID);
 	JsonObject->SetStringField(TEXT("event_type"), EventType);

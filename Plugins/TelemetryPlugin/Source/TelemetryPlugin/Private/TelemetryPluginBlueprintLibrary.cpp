@@ -6,17 +6,25 @@ UTelemetrySubsystem* UTelemetryBlueprintLibrary::GetTelemetrySubsystem(const UOb
 {
 	if (!WorldContextObject)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[TelemetryBP] GetTelemetrySubsystem called with null WorldContextObject"));
 		return nullptr;
 	}
 
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 	if (!World)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[TelemetryBP] Failed to get World from context object"));
 		return nullptr;
 	}
 
 	UGameInstance* GameInstance = World->GetGameInstance();
-	return GameInstance ? GameInstance->GetSubsystem<UTelemetrySubsystem>() : nullptr;
+	if (!GameInstance)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[TelemetryBP] Failed to get GameInstance"));
+		return nullptr;
+	}
+
+	return GameInstance->GetSubsystem<UTelemetrySubsystem>();
 }
 
 void UTelemetryBlueprintLibrary::ConfigureTelemetry(const UObject* WorldContextObject, const FString& ServerURL)
@@ -43,6 +51,22 @@ void UTelemetryBlueprintLibrary::EndSession(const UObject* WorldContextObject)
 	}
 }
 
+void UTelemetryBlueprintLibrary::StartRun(const UObject* WorldContextObject)
+{
+	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
+	{
+		Telemetry->StartRun();
+	}
+}
+
+void UTelemetryBlueprintLibrary::EndRun(const UObject* WorldContextObject, const FString& Reason)
+{
+	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
+	{
+		Telemetry->EndRun(Reason);
+	}
+}
+
 void UTelemetryBlueprintLibrary::LogPosition(const UObject* WorldContextObject, FVector Position, float GameTime)
 {
 	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
@@ -51,8 +75,7 @@ void UTelemetryBlueprintLibrary::LogPosition(const UObject* WorldContextObject, 
 	}
 }
 
-void UTelemetryBlueprintLibrary::LogInputAction(const UObject* WorldContextObject, UInputAction* InputAction, float
-                                                GameTime)
+void UTelemetryBlueprintLibrary::LogInputAction(const UObject* WorldContextObject, UInputAction* InputAction, float GameTime)
 {
 	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
 	{
@@ -75,10 +98,10 @@ void UTelemetryBlueprintLibrary::LogDamage(
 	}
 }
 
-void UTelemetryBlueprintLibrary::LogDeath(const UObject* WorldContextObject, FVector Position, float GameTime)
+void UTelemetryBlueprintLibrary::LogDeath(const UObject* WorldContextObject, const FString& Cause, FVector Position, float GameTime)
 {
 	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
 	{
-		Telemetry->SendDeathEvent("hello", Position, GameTime);
+		Telemetry->SendDeathEvent(Cause, Position, GameTime);
 	}
 }
