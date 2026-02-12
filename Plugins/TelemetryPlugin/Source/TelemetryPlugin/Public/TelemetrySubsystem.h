@@ -19,18 +19,26 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 
-	/** Configure the server endpoint - call this in GameInstance BP */
+	/** Configure the server endpoint - call this in GameInstance*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry",
 		meta=(Keywords="start, config, configure, endpoint, telemetry"))
 	void Configure(const FString& ServerURL);
 
-	/** Start a new session*/
+	/** Start a new session - call on startup (will prob need delay)*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords = "start session telemetry"))
 	void StartNewSession();
 
-	/** End current session*/
+	/** End current session - call on process terminate*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="end session telemetry"))
 	void EndSession();
+	
+	/** Start a new run - call on player respawn*/
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="start run telemetry"))
+	void StartRun();
+	
+	/** End current run - call on player death*/
+	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="end run telemetry"))
+	void EndRun();
 
 	/** Send position update - call from a timer */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="position update location tracking"))
@@ -43,6 +51,7 @@ public:
 	/** Send damage event - call when player takes damage */
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="damage health combat"))
 	void SendDamageEvent(
+		//TODO once verifying this is working, remove health after
 		float DamageAmount,
 		float HealthBefore,
 		float HealthAfter,
@@ -53,7 +62,7 @@ public:
 
 	/** Death event*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="death player end"))
-	void SendDeathEvent(FVector Position, float GameTime);
+	void SendDeathEvent(FString Cause, FVector Position, float GameTime);
 
 private:
 	// Internal helper to send JSON to server
@@ -69,6 +78,14 @@ private:
 	FString CurrentSessionID;
 	FString MachineName;
 	FString UserName;
+	// Run
+	FString CurrentRunID;
+	float CurrentRunStartTime;
+	float CurrentRunEndTime
+	FString EndReason;
+	int32 RoomsCleared;
+	
+	// Meta
 	int32 FrameCounter;
 
 	static constexpr float RequestTimeout = 5.0f;
