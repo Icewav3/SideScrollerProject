@@ -31,11 +31,11 @@ public:
 	/** End current session - call on process terminate*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="end session telemetry"))
 	void EndSession();
-	
+
 	/** Start a new run - call on player respawn*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="start run telemetry"))
 	void StartRun();
-	
+
 	/** End current run - call on player death*/
 	UFUNCTION(BlueprintCallable, Category = "Telemetry", meta=(Keywords="end run telemetry"))
 	void EndRun();
@@ -81,10 +81,10 @@ private:
 	// Run
 	FString CurrentRunID;
 	float CurrentRunStartTime;
-	float CurrentRunEndTime
+	float CurrentRunEndTime;
 	FString EndReason;
 	int32 RoomsCleared;
-	
+
 	// Meta
 	int32 FrameCounter;
 

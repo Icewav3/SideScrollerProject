@@ -126,7 +126,7 @@ void UTelemetrySubsystem::SendDamageEvent(
 	SendTelemetryEvent(EventData);
 }
 
-void UTelemetrySubsystem::SendDeathEvent(FVector Position, float GameTime)
+void UTelemetrySubsystem::SendDeathEvent(FString Cause, FVector Position, float GameTime)
 {
 	if (!IsTelemetryReady())
 	{

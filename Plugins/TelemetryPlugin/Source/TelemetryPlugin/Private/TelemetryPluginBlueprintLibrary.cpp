@@ -51,8 +51,8 @@ void UTelemetryBlueprintLibrary::LogPosition(const UObject* WorldContextObject, 
 	}
 }
 
-void UTelemetryBlueprintLibrary::LogInputAction(const UObject* WorldContextObject, UInputAction* InputAction, float 
-GameTime)
+void UTelemetryBlueprintLibrary::LogInputAction(const UObject* WorldContextObject, UInputAction* InputAction, float
+                                                GameTime)
 {
 	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
 	{
@@ -79,6 +79,6 @@ void UTelemetryBlueprintLibrary::LogDeath(const UObject* WorldContextObject, FVe
 {
 	if (UTelemetrySubsystem* Telemetry = GetTelemetrySubsystem(WorldContextObject))
 	{
-		Telemetry->SendDeathEvent(Position, GameTime);
+		Telemetry->SendDeathEvent("hello", Position, GameTime);
 	}
 }
