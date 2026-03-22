@@ -61,14 +61,6 @@ public:
 	static void EndRun(const UObject* WorldContextObject, const FString& Reason);
 
 	/** 
-	 * Increment rooms cleared counter
-	 * Call when player clears a room/arena
-	 */
-	UFUNCTION(BlueprintCallable, Category = "Telemetry",
-		meta=(WorldContext="WorldContextObject", Keywords="room cleared progress telemetry"))
-	static void IncrementRoomsCleared(const UObject* WorldContextObject);
-
-	/** 
 	 * Log position update
 	 * Typically called on a timer for player tracking
 	 */

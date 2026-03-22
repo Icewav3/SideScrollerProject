@@ -105,6 +105,14 @@ public:
 		meta=(Keywords="death player end"))
 	void SendDeathEvent(const FString& Cause, FVector Position, float GameTime);
 
+	/** Check if a session is active */
+	UFUNCTION(BlueprintPure, Category = "Telemetry")
+	bool IsSessionActive() const { return !CurrentSessionID.IsEmpty(); }
+
+	/** Check if a run is active */
+	UFUNCTION(BlueprintPure, Category = "Telemetry")
+	bool IsRunActive() const { return CurrentRunData.IsActive(); }
+
 private:
 	/** Send JSON telemetry event to server */
 	void SendTelemetryEvent(const TSharedPtr<FJsonObject>& JsonData) const;

@@ -142,8 +142,8 @@ void UTelemetrySubsystem::EndRun(const FString& Reason)
 	CurrentRunData.RunTotalTime = CurrentRunData.RunEndTime - CurrentRunData.RunStartTime;
 	CurrentRunData.EndReason = Reason;
 
-	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Run ended: %s | Reason: %s | Duration: %.2fs | Rooms: %d"), 
-		*CurrentRunData.RunID, *Reason, CurrentRunData.RunTotalTime, CurrentRunData.RoomsCleared);
+	UE_LOG(LogTemp, Log, TEXT("[Telemetry] Run ended: %s | Reason: %s | Duration: %.2fs"), 
+		*CurrentRunData.RunID, *Reason, CurrentRunData.RunTotalTime);
 
 	// Send run_end event (includes final run data)
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("run_end"), CurrentTime);
@@ -220,6 +220,7 @@ void UTelemetrySubsystem::SendDeathEvent(const FString& Cause, FVector Position,
 	}
 
 	TSharedPtr<FJsonObject> EventData = CreateBaseTelemetryObject(TEXT("death"), GameTime);
+	EventData->SetStringField(TEXT("cause"), Cause);
 	EventData->SetObjectField(TEXT("player_pos"), CreatePositionObject(Position));
 
 	SendTelemetryEvent(EventData);
@@ -235,6 +236,17 @@ TSharedPtr<FJsonObject> UTelemetrySubsystem::CreateBaseTelemetryObject(const FSt
 	JsonObject->SetStringField(TEXT("event_type"), EventType);
 	JsonObject->SetNumberField(TEXT("frame"), FrameCounter++);
 	JsonObject->SetNumberField(TEXT("game_time"), GameTime);
+
+	// add run data
+	if (CurrentRunData.IsActive() || EventType == TEXT("run_end"))
+	{
+		JsonObject->SetObjectField(TEXT("run_data"), CurrentRunData.ToJson());
+	}
+	else
+	{
+		// If no run throw it in there anyway
+		JsonObject->SetObjectField(TEXT("run_data"), FTelemetryRunData().ToJson());
+	}
 
 	return JsonObject;
 }
